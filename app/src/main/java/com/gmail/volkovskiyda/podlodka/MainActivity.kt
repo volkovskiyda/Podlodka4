@@ -5,33 +5,46 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.*
+import com.gmail.volkovskiyda.podlodka.ui.MainScreen
+import com.gmail.volkovskiyda.podlodka.ui.SessionScreen
 import com.gmail.volkovskiyda.podlodka.ui.theme.PodlodkaTheme
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val repository = (application as MainApp).repository
+
         setContent {
             PodlodkaTheme {
                 Surface(color = MaterialTheme.colors.background) {
-                    Greeting("Android")
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "main") {
+                        composable(route = "main") {
+                            MainScreen(
+                                repository,
+                                navigateToSession = { sessionId ->
+                                    navController.navigate("session/${sessionId}")
+                                },
+                                onFinish = { finish() }
+                            )
+                        }
+                        composable(
+                            route = "session/{sessionId}",
+                            arguments = listOf(navArgument("userId") {
+                                type = NavType.StringType
+                            })
+                        ) { backStackEntry ->
+                            SessionScreen(
+                                repository,
+                                requireNotNull(backStackEntry.arguments?.getString("sessionId"))
+                            )
+                        }
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    PodlodkaTheme {
-        Greeting("Android")
     }
 }
